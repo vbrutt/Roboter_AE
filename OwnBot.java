@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 
 public class OwnBot extends Creature {
 	@Override
@@ -8,30 +10,34 @@ public class OwnBot extends Creature {
 			int d = distance(obs.position) - 1;
 			// Move until the far edge
 			for (int i = 0; i < d; ++i) {
-				if (!moveForward() && isEnemy(obs)) {
-					// Hit something unexpected!
-					attack();
-					break;
-				}else if (!moveForward()) {
-					turnLeft();
-				}
-			}
-			// if (isEnemy(obs)) {
-			// // Attack whatever we observed
-			// attack();
-			// }
-			//
-			// // Turn
-			// turnRight();
-			// emitPheromone("ph");
-			// if(this.getPheromone().equals("ph")) {
-			// turnLeft();
-			// }
-			
-			
-			// turnLeft();
+				moveForward();
+				observeAround(obs);
+				obs = observe()[0];
+				System.out.println("Type" + obs.type);
 
+			}
+			if (isEnemy(obs)) {
+				// Attack whatever we observed
+				attack();
+			}
+
+			turnRight();
 		}
+	}
+
+	private void observeAround(Observation obs) {
+		int count = 0;
+		List<Observation> observed = new ArrayList<>();
+		do {
+			turnRight();
+			obs = observe()[0];
+			if (distance(obs.position) - 1 > 0) {
+				System.out.println("oi");
+				observed.add(obs);
+			}
+			count++;
+
+		} while (count < 4);
 	}
 
 	@Override
