@@ -10,20 +10,17 @@ public class OwnBot extends Creature {
 	private Map<Point, Direction> chosenDirection = new HashMap<>();
 	private List<Point> visitedJunctions = new ArrayList<>();
 	private Map<Point, List<Direction>> possibleDirections = new HashMap<>();
-	private boolean set = false;
 
 	@Override
 	public void run() {
 		while (true) {
 			Observation obs = observe()[0];
-
 			int d = distance(obs.position) - 1;
 			// Move until the far edge
 			for (int i = 0; i < d; ++i) {
 				moveForward();
 				lookRightAndLeft(obs);
 				// obs = observe()[0];
-
 			}
 			if (isEnemy(obs)) {
 				// Attack whatever we observed
@@ -38,15 +35,9 @@ public class OwnBot extends Creature {
 			case 2:
 				turnRight();
 				break;
-
 			default:
 				break;
 			}
-
-			// if (!(set)) {
-			// turnLeft();
-			//
-			// }
 		}
 	}
 
@@ -92,7 +83,15 @@ public class OwnBot extends Creature {
 			possibleDirections.put(orginalPositon, directions); // hier sind alle mögilche Directions von diesem Punkt
 			// decideDirection(orginalPositon, directions);
 		}
+	}
 
+	private void goGetTreasure(Observation obs) {
+		while (distance(obs.position) > 1) {
+			if (!moveForward()) {
+				attack();
+			} 
+		}
+		attack();
 	}
 
 	private Direction checkHowManyWays(Observation obs, Direction originalDirection) {
@@ -102,6 +101,9 @@ public class OwnBot extends Creature {
 		Direction direction = null;
 		// if (distance(obs.position) - 1 > 1) {
 		if (!(obs.type == Type.WALL)) {
+			if (obs.classId == Creature.TREASURE_CLASS_ID) {
+				goGetTreasure(obs);
+			}
 			if (checkExistance(obs)) {
 				direction = chosenDirection.get(obs.position);
 				Point p = turnRightDirection(direction, obs.position);
@@ -113,7 +115,6 @@ public class OwnBot extends Creature {
 				visitedJunctions.add(obs.position);
 				direction = getDirection();
 				chosenDirection.put(obs.position, direction);
-
 			}
 		}
 		return direction;
