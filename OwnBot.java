@@ -39,6 +39,7 @@ public class OwnBot extends Creature {
 				break;
 			}
 		}
+
 	}
 
 	private boolean checkExistance(Observation obs) {
@@ -59,7 +60,7 @@ public class OwnBot extends Creature {
 		Direction originalDirection = getDirection();
 		Point orginalPositon = obs.position;
 		List<Direction> directions = new ArrayList<>();
-		// damit er sich in die drei Richtungen dreht
+
 		for (int i = 0; i < 3; i++) {
 			if (i < 1) {
 				turnLeft();
@@ -89,7 +90,7 @@ public class OwnBot extends Creature {
 		while (distance(obs.position) > 1) {
 			if (!moveForward()) {
 				attack();
-			} 
+			}
 		}
 		attack();
 	}
@@ -101,7 +102,7 @@ public class OwnBot extends Creature {
 		Direction direction = null;
 		// if (distance(obs.position) - 1 > 1) {
 		if (!(obs.type == Type.WALL)) {
-			if (obs.classId == Creature.TREASURE_CLASS_ID) {
+			if (obs.classId == Creature.TREASURE_CLASS_ID || obs.classId == Creature.APPLE_CLASS_ID) {
 				goGetTreasure(obs);
 			}
 			if (checkExistance(obs)) {
