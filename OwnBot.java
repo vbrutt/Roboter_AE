@@ -1,4 +1,3 @@
-import java.awt.Dimension;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +10,7 @@ public class OwnBot extends Creature {
 	private List<Point> visitedJunctions = new ArrayList<>();
 	private Map<Point, List<Direction>> possibleDirections = new HashMap<>();
 
+	// TODO Hazards vermeiden
 	@Override
 	public void run() {
 		while (true) {
@@ -22,7 +22,7 @@ public class OwnBot extends Creature {
 				lookRightAndLeft(obs);
 				// obs = observe()[0];
 			}
-			if (isEnemy(obs)) {
+			if (isEnemy(obs) || obs.type == Type.HAZARD) {
 				// Attack whatever we observed
 				attack();
 			}
@@ -31,15 +31,16 @@ public class OwnBot extends Creature {
 			switch (i) {
 			case 1:
 				turnLeft();
+				chosenDirection.put(obs.position, getDirection());
 				break;
 			case 2:
 				turnRight();
+				chosenDirection.put(obs.position, getDirection());
 				break;
 			default:
 				break;
 			}
 		}
-
 	}
 
 	private boolean checkExistance(Observation obs) {
@@ -47,13 +48,6 @@ public class OwnBot extends Creature {
 			return true;
 		}
 		return false;
-	}
-
-	private void decideDirection(Point orginalPositon, List<Direction> noDirections) {
-		Random r = new Random();
-		int i = r.nextInt(noDirections.size());
-
-		chosenDirection.put(orginalPositon, noDirections.get(i));
 	}
 
 	private void lookRightAndLeft(Observation obs) {
@@ -81,8 +75,7 @@ public class OwnBot extends Creature {
 			}
 		}
 		if (!(directions.isEmpty())) {
-			possibleDirections.put(orginalPositon, directions); // hier sind alle mögilche Directions von diesem Punkt
-			// decideDirection(orginalPositon, directions);
+			possibleDirections.put(orginalPositon, directions);
 		}
 	}
 
@@ -95,63 +88,29 @@ public class OwnBot extends Creature {
 		attack();
 	}
 
+	private void checkIfTreasure(Observation obs) {
+		if (obs.classId == Creature.TREASURE_CLASS_ID || obs.classId == Creature.APPLE_CLASS_ID) {
+			goGetTreasure(obs);
+		}
+	}
+
 	private Direction checkHowManyWays(Observation obs, Direction originalDirection) {
-		// Direction originalDirection = getDirection();
 
 		obs = observe()[0];
 		Direction direction = null;
-		// if (distance(obs.position) - 1 > 1) {
-		if (!(obs.type == Type.WALL)) {
-			if (obs.classId == Creature.TREASURE_CLASS_ID || obs.classId == Creature.APPLE_CLASS_ID) {
-				goGetTreasure(obs);
-			}
+		if (distance(obs.position) - 1 > 1) {
+			checkIfTreasure(obs);
 			if (checkExistance(obs)) {
 				direction = chosenDirection.get(obs.position);
-				Point p = turnRightDirection(direction, obs.position);
-				// Direction d = directionToPoint(p);
 				turn(getDirection(), originalDirection);
+				visitedJunctions.remove(obs.position);
 			} else {
-				// mann kann hierlang weiter laufen
 				emitPheromone(obs.position.toString());
 				visitedJunctions.add(obs.position);
 				direction = getDirection();
-				chosenDirection.put(obs.position, direction);
 			}
 		}
 		return direction;
-	}
-
-	/** Returns the primary direction of travel to reach this point. */
-	protected Direction directionToPoint(Point loc) {
-		Point pos = getPosition();
-
-		int dx = loc.x - pos.x;
-		int dy = loc.y - pos.y;
-
-		if (Math.abs(dx) >= Math.abs(dy)) {
-			// Mostly off on the horizontal
-			if (dx < 0) {
-				return Direction.WEST;
-			} else {
-				return Direction.EAST;
-			}
-		} else if (dy < 0) {
-			return Direction.NORTH;
-		} else {
-			return Direction.SOUTH;
-		}
-	}
-
-	private void defineDirection() {
-		Dimension d = getMapDimensions();
-		Observation[][] data = new Observation[d.width][d.height];
-		Point p = new Point(d.width, d.height);
-
-		Observation N = data[p.x][p.y - 1];
-		Observation S = data[p.x][p.y + 1];
-		Observation E = data[p.x + 1][p.y];
-		Observation W = data[p.x - 1][p.y];
-
 	}
 
 	/** Rotate to face this direction, returning true if actually rotated. */
@@ -171,61 +130,6 @@ public class OwnBot extends Creature {
 			turnRight();
 		}
 		return true;
-	}
-
-	/** Turn in a random direction 90 degrees. */
-	protected void turnRandom() {
-		Random random = new Random();
-		if (random.nextInt(2) == 0) {
-			turnLeft();
-		} else {
-			turnRight();
-		}
-	}
-
-	private Point turnRightDirection(Direction direction, Point p) {
-		switch (direction.toInt()) {
-		case 0:
-			return new Point(p.x, p.y - 1);
-		case 2:
-			return new Point(p.x, p.y + 1);
-		case 1:
-			return new Point(p.x + 1, p.y);
-		case 3:
-			return new Point(p.x - 1, p.y);
-		default:
-			return null;
-		}
-	}
-
-	private Direction getOppositeDirection(Direction currentDirection) {
-		switch (currentDirection) {
-		case NORTH:
-			return Direction.SOUTH;
-		case SOUTH:
-			return Direction.NORTH;
-		case EAST:
-			return Direction.WEST;
-		case WEST:
-			return Direction.EAST;
-		default:
-			break;
-		}
-		return null;
-	}
-
-	private void observeAround(Observation obs) {
-		int count = 0;
-		List<Point> observed = new ArrayList<>();
-		Direction currentDirection = getDirection();
-		do {
-			turnRight();
-			obs = observe()[0];
-			if (distance(obs.position) - 1 > 0 && !(getDirection().equals(getOppositeDirection(currentDirection)))) {
-				observed.add(obs.position);
-			}
-			count++;
-		} while (count < 4);
 	}
 
 	@Override
