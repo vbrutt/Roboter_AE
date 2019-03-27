@@ -27,10 +27,51 @@ public class OwnBot_NS extends Creature {
 				attack();
 			}
 
-			attack();
+			if(isEnemy(obs)) {
+				if(obs.className == "Apple") {
+					while(myMoveForward()) {
+						
+					}
+				}
+				killEnemy(obs);
+			}
 			turn(obs);
 
 		}
+	}
+
+	private void killEnemy(Observation obs) {
+		int enemyId = obs.id;
+		if (distance(obs.position) == 1) {
+			attack();
+		} else {
+			while (obs.id == enemyId && distance(obs.position) > 2) {
+				moveForward();
+				obs = look();
+			}
+
+			if (distance(obs.position) == 1)
+				attack();
+			else {
+				// attack strategy
+				while (obs.id == enemyId && distance(obs.position) == 2 && !isVulnerable(obs)) {
+					// wait
+					obs = look();
+				}
+				// if the loop broke because the enemy became vulnerable,
+				// kill it
+				if (distance(obs.position) == 1)
+					attack();
+				else if (isVulnerable(obs)) {
+					moveForward();
+					attack();
+				}
+			}
+		}
+	}
+
+	private boolean isVulnerable(Observation o) {
+		return (isEnemy(o) && distance(o.position) == 2 && !getDirection().equals(o.direction.opposite()));
 	}
 
 	private void turn(Observation obs) {
